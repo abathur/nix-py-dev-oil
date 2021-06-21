@@ -1,0 +1,149 @@
+From f79b447aa4c2149193f907be584502948b5cbc01 Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Fri, 26 Feb 2021 20:18:26 -0600
+Subject: force namespace via __init__.py
+
+---
+ __init__.py | 130 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 130 insertions(+)
+ create mode 100644 __init__.py
+
+diff --git a/__init__.py b/__init__.py
+new file mode 100644
+index 00000000..b4b643f5
+--- /dev/null
++++ b/__init__.py
+@@ -0,0 +1,130 @@
++import sys
++import logging
++import __builtin__
++
++log = logging.getLogger(__name__)
++
++"""
++This is all a little arcane, so it's worth explaining a bit.
++
++Oil isn't really packaged as a library. Initially I forked
++and packaged for expediency, and because I was hoping to
++upstream the changes. Oil isn't interested in carrying these
++but I want to minimize the work it takes to catch up with
++upstream at any given time.
++
++Unfortuately, forcing a namespace on Oil and using it isn't
++enough on its own. Its internal imports aren't namespaced,
++and some directories are generic (ex "misc", and "tools").
++
++So, we're monkeypatching __builtins__.__import__ to:
++- detect when something in oil is importing
++- try first to prefix it with "oil." and fall back if not
++  (import oil stuff from oil., but don't block batteries and
++  other packages)
++
++TODO: This isn't terribly rigorous. A marginal improvement
++might be generating a list of packages (or maybe the whole
++tree) either as a maintenance task or at build time and only
++fiddling with these. This list could also inform the import
++test in .nix.
++
++CAUTION: Had to wrestle w/ the potential for different paths
++to lead to distinct imports (i.e., n instances of the same
++module which cause isinstance() to fail on some things it
++should succeed on.
++"""
++
++_oil_imports = dict()
++# TODO: I don't like hard-coding these
++_oil_exts = {
++    "fastlex",
++    "libc",
++    "lineinput",
++    "posix_",
++}
++
++
++def _oildev_import(name, *args):
++    """
++    If it looks like oil is the source of this import, try
++    to rewrite the import to oil.<name>.
++
++    Otherwise (including if above fails) import normally.
++
++    TODO: if you have to recover the understanding at some
++    point, document why/how the arg business is like this.
++    There are some contexts that call with expected args
++    (I think this is plain import), and some that don't (I
++    think this maybe be via importlib?)
++    """
++    _globals = globals()
++    _locals = locals()
++    _ids = list()
++    try:
++        _globals, _locals, _ids = args[0:3]
++    except ValueError as e:
++        print("exception!", name, args, globals())
++
++    _lvl = args[3] if len(args) > 3 else -1
++
++    current_file = _globals["__file__"]
++    ret = None
++    if "/oil/" in current_file and name not in _oil_exts:
++        log.debug("rewrite imports to %r", name)
++        namespaced = "oil." + name
++        if name in _oil_imports and namespaced in _oil_imports:
++            log.debug("both name and namespaced are in _oil_imports; returning early")
++            if id(_oil_imports[namespaced]) != id(_oil_imports[name]):
++                raise Exception("Module IDs differ")
++            return _oil_imports[name]
++        try:
++            ret = _oildev_real_import(namespaced, _globals, _locals, _ids, _lvl)
++            log.debug(
++                "putting %r in import cache with name %r and id %r",
++                ret,
++                namespaced,
++                id(ret),
++            )
++            _oil_imports[namespaced] = ret
++
++            # but also add it under the un-rewritten name
++            sys.modules[name] = ret
++
++            if (
++                len(
++                    set(
++                        [
++                            id(ret),
++                        ]
++                    )
++                )
++                > 1
++            ):
++                raise Exception("Module IDs unexpectedly differ")
++        except ImportError:
++            ret = _oildev_real_import(name, _globals, _locals, _ids, _lvl)
++            log.debug(
++                "putting %r in import cache with name %r and id %r",
++                ret,
++                name,
++                id(ret),
++            )
++            _oil_imports[name] = ret
++
++    if not ret:
++        ret = _oildev_real_import(name, _globals, _locals, _ids, _lvl)
++        log.debug(
++            "putting %r in import cache with name %r and id %r", ret, name, id(ret)
++        )
++        _oil_imports[name] = ret
++
++    log.debug(
++        "%r is trying to import %r and we're returning %r ", current_file, name, ret
++    )
++
++    return ret
++
++
++_oildev_real_import = __builtin__.__import__
++__builtin__.__import__ = _oildev_import
+-- 
+2.31.1
+
