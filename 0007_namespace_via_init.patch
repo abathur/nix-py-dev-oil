@@ -1,0 +1,105 @@
+From 35850df72abb44ba11c8bc67ed5e7e76cad64c5a Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Fri, 26 Feb 2021 20:18:26 -0600
+Subject: force namespace via __init__.py
+
+---
+ __init__.py | 86 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 86 insertions(+)
+ create mode 100644 __init__.py
+
+diff --git a/__init__.py b/__init__.py
+new file mode 100644
+index 00000000..1bf26fb0
+--- /dev/null
++++ b/__init__.py
+@@ -0,0 +1,86 @@
++import sys
++import __builtin__
++
++# being coy for now
++PLUME = str("\x6f\x69\x6c")
++DIR_DE_PLUME = "/{:}/".format(PLUME)
++NOM_DE_PLUME = "{:}.".format(PLUME)
++
++import_cache = dict()
++# TODO: I don't like hard-coding these
++_extensions = {
++    "fastlex",
++    "libc",
++    "lineinput",
++    "posix_",
++}
++
++
++def _import(name, *args):
++    _globals = globals()
++    _locals = locals()
++    _ids = list()
++    try:
++        _globals, _locals, _ids = args[0:3]
++    except ValueError as e:
++        print("exception!", name, args, globals())
++
++    _lvl = args[3] if len(args) > 3 else -1
++
++    current_file = _globals["__file__"]
++    ret = None
++    if DIR_DE_PLUME in current_file and name not in _extensions:
++        # logger.debug("rewrite imports to %r", name)
++        namespaced = NOM_DE_PLUME + name
++        if name in import_cache and namespaced in import_cache:
++            # logger.debug("both name and namespaced are in import_cache; returning early")
++            if id(import_cache[namespaced]) != id(import_cache[name]):
++                raise Exception("Module IDs differ")
++            return import_cache[name]
++        try:
++            ret = original_import(namespaced, _globals, _locals, _ids, _lvl)
++            # logger.debug(
++            #     "putting %r in import cache with name %r and id %r",
++            #     ret,
++            #     namespaced,
++            #     id(ret),
++            # )
++            import_cache[namespaced] = ret
++
++            # but also add it under the un-rewritten name
++            sys.modules[name] = ret
++
++            if (
++                len(
++                    set(
++                        [
++                            id(ret),
++                        ]
++                    )
++                )
++                > 1
++            ):
++                raise Exception("Module IDs unexpectedly differ")
++        except ImportError:
++            ret = original_import(name, _globals, _locals, _ids, _lvl)
++            # logger.debug(
++            #     "putting %r in import cache with name %r and id %r", ret, name, id(ret),
++            # )
++            import_cache[name] = ret
++
++    if not ret:
++        ret = original_import(name, _globals, _locals, _ids, _lvl)
++        # logger.debug(
++        #     "putting %r in import cache with name %r and id %r", ret, name, id(ret)
++        # )
++        import_cache[name] = ret
++
++    # logger.debug(
++    #     "%r is trying to import %r and we're returning %r ", current_file, name, ret
++    # )
++
++    return ret
++
++
++original_import = __builtin__.__import__
++__builtin__.__import__ = _import
+-- 
+2.31.1
+
