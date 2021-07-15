@@ -1,0 +1,94 @@
+From c89b61a47a40222d5b22e70edb4469213e8b4d1e Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Sat, 17 Jul 2021 10:39:16 -0500
+Subject: avoid import churn
+
+---
+ asdl/pybase.py     | 19 ++++++++++++-------
+ frontend/consts.py | 18 +++++++++++-------
+ 2 files changed, 23 insertions(+), 14 deletions(-)
+
+diff --git a/asdl/pybase.py b/asdl/pybase.py
+index 4de3a93b..8cb1710b 100644
+--- a/asdl/pybase.py
++++ b/asdl/pybase.py
+@@ -28,6 +28,14 @@ class CompoundObj(Obj):
+   # The tag is always set for constructor types, which are subclasses of sum
+   # types.  Never set for product types.
+   tag = 0  # TYPED: Changed from None.  0 is invalid!
++  _fmt = None
++
++  @property
++  def fmt(self):
++    if not self.__class__._fmt:
++      from asdl import format as fmt
++      self.__class__._fmt = staticmethod(fmt)
++    return self._fmt
+ 
+   def PrettyTree(self):
+     # type: () -> hnode_t
+@@ -44,20 +52,17 @@ class CompoundObj(Obj):
+   def PrettyPrint(self, f=None):
+     # type: (Optional[mylib.Writer]) -> None
+     """Print abbreviated tree in color, for debugging."""
+-    from asdl import format as fmt
+     f = f if f else mylib.Stdout()
+ 
+-    ast_f = fmt.DetectConsoleOutput(f)
++    ast_f = self.fmt.DetectConsoleOutput(f)
+     tree = self.AbbreviatedTree()
+-    fmt.PrintTree(tree, ast_f)
++    self.fmt.PrintTree(tree, ast_f)
+ 
+   def __repr__(self):
+     # type: () -> str
+-    # TODO: Break this circular dependency.
+-    from asdl import format as fmt
+ 
+-    ast_f = fmt.TextOutput(mylib.BufWriter())  # No color by default.
++    ast_f = self.fmt.TextOutput(mylib.BufWriter())  # No color by default.
+     tree = self.PrettyTree()
+-    fmt.PrintTree(tree, ast_f)
++    self.fmt.PrintTree(tree, ast_f)
+     s, _ = ast_f.GetRaw()
+     return s
+diff --git a/frontend/consts.py b/frontend/consts.py
+index 7cda04c2..9e99db9e 100644
+--- a/frontend/consts.py
++++ b/frontend/consts.py
+@@ -36,21 +36,25 @@ VISIBLE_SHOPT_NUMS = option_def.VISIBLE_SHOPT_NUMS  # used to print
+ 
+ BUILTIN_NAMES = builtin_def.BUILTIN_NAMES  # Used by builtin_comp.py
+ 
++_ID_TO_KIND = _BOOL_ARG_TYPES = None # lazily imported
+ 
+ def GetKind(id_):
+   # type: (Id_t) -> Kind_t
+   """To make coarse-grained parsing decisions."""
+-
+-  from _devbuild.gen.id_kind import ID_TO_KIND  # break circular dep
+-  return ID_TO_KIND[id_]
++  global _ID_TO_KIND
++  if not _ID_TO_KIND:
++    from _devbuild.gen.id_kind import ID_TO_KIND  # break circular dep
++    _ID_TO_KIND = ID_TO_KIND
++  return _ID_TO_KIND[id_]
+ 
+ 
+ def BoolArgType(id_):
+   # type: (Id_t) -> bool_arg_type_t
+-
+-  from _devbuild.gen.id_kind import BOOL_ARG_TYPES  # break circular dep
+-  return BOOL_ARG_TYPES[id_]
+-
++  global _BOOL_ARG_TYPES
++  if not _BOOL_ARG_TYPES:
++    from _devbuild.gen.id_kind import BOOL_ARG_TYPES  # break circular dep
++    _BOOL_ARG_TYPES = BOOL_ARG_TYPES
++  return _BOOL_ARG_TYPES[id_]
+ 
+ #
+ # Redirect Tables associated with IDs
+-- 
+2.31.1
+

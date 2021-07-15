@@ -1,19 +1,19 @@
-From f79b447aa4c2149193f907be584502948b5cbc01 Mon Sep 17 00:00:00 2001
+From 1332470068d5de49b73f488eb8c4e3d71fe34102 Mon Sep 17 00:00:00 2001
 From: "Travis A. Everett" <travis.a.everett@gmail.com>
 Date: Fri, 26 Feb 2021 20:18:26 -0600
 Subject: force namespace via __init__.py
 
 ---
- __init__.py | 130 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 130 insertions(+)
+ __init__.py | 120 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 120 insertions(+)
  create mode 100644 __init__.py
 
 diff --git a/__init__.py b/__init__.py
 new file mode 100644
-index 00000000..b4b643f5
+index 00000000..fcd33b33
 --- /dev/null
 +++ b/__init__.py
-@@ -0,0 +1,130 @@
+@@ -0,0 +1,120 @@
 +import sys
 +import logging
 +import __builtin__
@@ -54,6 +54,7 @@ index 00000000..b4b643f5
 +_oil_imports = dict()
 +# TODO: I don't like hard-coding these
 +_oil_exts = {
++    "fanos",
 +    "fastlex",
 +    "libc",
 +    "lineinput",
@@ -76,9 +77,10 @@ index 00000000..b4b643f5
 +    """
 +    _globals = globals()
 +    _locals = locals()
-+    _ids = list()
++    _ids = tuple()
 +    try:
 +        _globals, _locals, _ids = args[0:3]
++        _ids = tuple(_ids) if _ids else _ids
 +    except ValueError as e:
 +        print("exception!", name, args, globals())
 +
@@ -89,51 +91,39 @@ index 00000000..b4b643f5
 +    if "/oil/" in current_file and name not in _oil_exts:
 +        log.debug("rewrite imports to %r", name)
 +        namespaced = "oil." + name
-+        if name in _oil_imports and namespaced in _oil_imports:
-+            log.debug("both name and namespaced are in _oil_imports; returning early")
-+            if id(_oil_imports[namespaced]) != id(_oil_imports[name]):
-+                raise Exception("Module IDs differ")
-+            return _oil_imports[name]
++        if (namespaced, _ids) in _oil_imports:
++            log.debug("namespaced in _oil_imports; returning early")
++            return _oil_imports[(namespaced, _ids)]
++        elif (name, _ids) in _oil_imports:
++            log.debug("name in _oil_imports; returning early")
++            return _oil_imports[(name, _ids)]
 +        try:
 +            ret = _oildev_real_import(namespaced, _globals, _locals, _ids, _lvl)
 +            log.debug(
-+                "putting %r in import cache with name %r and id %r",
++                "A putting %r in import cache with name %r and id %r",
 +                ret,
 +                namespaced,
 +                id(ret),
 +            )
-+            _oil_imports[namespaced] = ret
-+
-+            # but also add it under the un-rewritten name
-+            sys.modules[name] = ret
-+
-+            if (
-+                len(
-+                    set(
-+                        [
-+                            id(ret),
-+                        ]
-+                    )
-+                )
-+                > 1
-+            ):
-+                raise Exception("Module IDs unexpectedly differ")
-+        except ImportError:
++            _oil_imports[(namespaced, _ids)] = ret
++        except ImportError as e:
++            log.debug("namespaced import failed with %r, falling back on bare", e)
 +            ret = _oildev_real_import(name, _globals, _locals, _ids, _lvl)
 +            log.debug(
-+                "putting %r in import cache with name %r and id %r",
++                "B putting %r in import cache with name %r and id %r",
 +                ret,
 +                name,
 +                id(ret),
 +            )
-+            _oil_imports[name] = ret
++            _oil_imports[(name, _ids)] = ret
 +
++    # name can still be "oil." (i.e., resholve is importing)
 +    if not ret:
 +        ret = _oildev_real_import(name, _globals, _locals, _ids, _lvl)
 +        log.debug(
-+            "putting %r in import cache with name %r and id %r", ret, name, id(ret)
++            "C putting %r in import cache with name %r and id %r", ret, name, id(ret)
 +        )
-+        _oil_imports[name] = ret
++        _oil_imports[(name, _ids)] = ret
 +
 +    log.debug(
 +        "%r is trying to import %r and we're returning %r ", current_file, name, ret
