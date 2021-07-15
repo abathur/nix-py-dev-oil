@@ -53,8 +53,8 @@ rec {
     src = fetchFromGitHub {
       owner = "oilshell";
       repo = "oil";
-      rev = "11c6bd3ca0e126862c7a1f938c8510779837affa";
-      hash = "sha256-UTQywtx+Dn1/qx5uocqgGn7oFYW4R5DbuiRNF8t/BzY=";
+      rev = "799c0703d1da86cb80d1f5b163edf9369ad77cf1";
+      hash = "sha256-QNSISr719ycZ1Z0quxHWzCb3IvHGj9TpogaYz20hDM4=";
 
       /*
         It's not critical to drop most of these; the primary target is
