@@ -71,10 +71,6 @@ rec {
       '';
     };
 
-    # TODO: not sure why I'm having to set this for nix-build...
-    #       can anyone tell if I'm doing something wrong?
-    SOURCE_DATE_EPOCH = 315532800;
-
     # patch to support a python package, pass tests on macOS, etc.
     patches = (
       builtins.map
