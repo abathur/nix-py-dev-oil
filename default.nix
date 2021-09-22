@@ -58,6 +58,7 @@ rec {
     src = fetchFromGitHub {
       owner = "oilshell";
       repo = "oil";
+      # rev == present HEAD of release/0.8.12
       rev = "799c0703d1da86cb80d1f5b163edf9369ad77cf1";
       hash = "sha256-QNSISr719ycZ1Z0quxHWzCb3IvHGj9TpogaYz20hDM4=";
 
@@ -70,10 +71,6 @@ rec {
         rm -rf Python-2.7.13 benchmarks metrics py-yajl rfc gold web testdata services demo devtools cpp
       '';
     };
-
-    # TODO: not sure why I'm having to set this for nix-build...
-    #       can anyone tell if I'm doing something wrong?
-    SOURCE_DATE_EPOCH = 315532800;
 
     # patch to support a python package, pass tests on macOS, etc.
     patches = (
@@ -98,7 +95,12 @@ rec {
       patchShebangs asdl build core doctools frontend native oil_lang
     '';
 
-    # TODO: this may be obsolete?
+    /*
+    We did convince oil to upstream an env for specifying
+    this to support a shell.nix. Would need a patch if they
+    later drop this support. See:
+    https://github.com/oilshell/oil/blob/46900310c7e4a07a6223eb6c08e4f26460aad285/doctools/cmark.py#L30-L34
+    */
     _NIX_SHELL_LIBCMARK = "${cmark}/lib/libcmark${stdenv.hostPlatform.extensions.sharedLibrary}";
 
     # See earlier note on glibcLocales TODO: verify needed?
