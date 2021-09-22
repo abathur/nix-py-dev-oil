@@ -46,6 +46,11 @@ rec {
     nativeBuildInputs = [ git ];
   };
 
+  /*
+    Upstream isn't interested in packaging this as a library
+    (or accepting all of the patches we need to do so).
+    This creates one without disturbing upstream too much.
+  */
   oildev = python27Packages.buildPythonPackage rec {
     pname = "oildev-unstable";
     version = "2021-07-14";
