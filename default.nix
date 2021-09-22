@@ -66,6 +66,9 @@ rec {
         It's not critical to drop most of these; the primary target is
         the vendored fork of Python-2.7.13, which is ~ 55M and over 3200
         files, dozens of which get interpreter script patches in fixup.
+
+        Note: -f is necessary to keep it from being a pain to update
+        hash on rev updates. Command will fail w/o and not print hash.
       */
       extraPostFetch = ''
         rm -rf Python-2.7.13 benchmarks metrics py-yajl rfc gold web testdata services demo devtools cpp
