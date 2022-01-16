@@ -1,0 +1,32 @@
+From a5b9d97c700e6ebd100cf2ff96a5233fb2e1faa5 Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Sun, 16 Jan 2022 12:04:09 -0600
+Subject: avoid nix arch64-darwin issue
+
+The nixpkgs toolchain will try to auto-sign packages built on arch64-
+darwin by snipping an `-o <path>` out of cc executions. configure uses
+-o /dev/null to run some sanity-check builds, but the signing then
+fails because /dev/null obviously isn't a real object file :)
+
+Need to maintain until there's a fix for the issue at
+https://github.com/NixOS/nixpkgs/issues/154203
+---
+ configure | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure b/configure
+index 24a77534..c93f895f 100755
+--- a/configure
++++ b/configure
+@@ -156,7 +156,7 @@ FLAG_datarootdir=${FLAG_datarootdir:-$FLAG_prefix/share}
+ # No output file, no logging, no stderr.
+ # TODO: Maybe send stdout/stderr to config.log?
+ cc_quiet() {
+-  cc "$@" -o /dev/null >/dev/null 2>&1
++  cc "$@" >/dev/null 2>&1
+ }
+ 
+ cc_or_die() {
+-- 
+2.33.1
+
