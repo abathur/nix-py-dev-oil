@@ -1,0 +1,25 @@
+From 910602fc507407611cba6bedf0ecd10c3f0e15b3 Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Sat, 28 Jan 2023 15:02:01 -0600
+Subject: disable line-input to drop readline dep
+
+---
+ build/py.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/py.sh b/build/py.sh
+index 6d89eb604..df7f1ab21 100755
+--- a/build/py.sh
++++ b/build/py.sh
+@@ -406,7 +406,7 @@ py-source() {
+ # No fastlex, because we don't want to require re2c installation.
+ py-extensions() {
+   pylibc
+-  line-input
++  # line-input
+   posix_
+   fanos
+ 
+-- 
+2.36.0
+

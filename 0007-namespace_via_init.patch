@@ -13,7 +13,7 @@ new file mode 100644
 index 00000000..fcd33b33
 --- /dev/null
 +++ b/__init__.py
-@@ -0,0 +1,120 @@
+@@ -0,0 +1,118 @@
 +import sys
 +import logging
 +import __builtin__
@@ -54,10 +54,8 @@ index 00000000..fcd33b33
 +_oil_imports = dict()
 +# TODO: I don't like hard-coding these
 +_oil_exts = {
-+    "fanos",
 +    "fastlex",
 +    "libc",
-+    "lineinput",
 +    "posix_",
 +}
 +
@@ -89,7 +87,7 @@ index 00000000..fcd33b33
 +    current_file = _globals["__file__"]
 +    ret = None
 +    if "/oil/" in current_file and name not in _oil_exts:
-+        log.debug("rewrite imports to %r", name)
++        log.debug("rewrite imports to %r w/ ids %r", name, _ids)
 +        namespaced = "oil." + name
 +        if (namespaced, _ids) in _oil_imports:
 +            log.debug("namespaced in _oil_imports; returning early")

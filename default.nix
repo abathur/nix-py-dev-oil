@@ -9,8 +9,7 @@
 , # py-yajl deps
   git
 , # oil deps
-  readline
-, cmark
+  cmark
 , file
 , glibcLocales
 , six
@@ -36,12 +35,12 @@ rec {
 
   py-yajl = python27.pkgs.buildPythonPackage rec {
     pname = "oil-pyyajl-unstable";
-    version = "2019-12-05";
+    version = "2022-09-01";
     src = fetchFromGitHub {
       owner = "oilshell";
       repo = "py-yajl";
-      rev = "eb561e9aea6e88095d66abcc3990f2ee1f5339df";
-      sha256 = "17hcgb7r7cy8r1pwbdh8di0nvykdswlqj73c85k6z8m0filj3hbh";
+      rev = "72686b0e2e9d13d3ce5fefe47ecd607c540c90a3";
+      hash = "sha256-H3GKN0Pq1VFD5+SWxm8CXUVO7zAyj/ngKVmDaG/aRT4=";
       fetchSubmodules = true;
     };
     # just for submodule IIRC
@@ -60,9 +59,9 @@ rec {
     src = fetchFromGitHub {
       owner = "oilshell";
       repo = "oil";
-      # rev == present HEAD of release/0.8.12
-      rev = "799c0703d1da86cb80d1f5b163edf9369ad77cf1";
-      hash = "sha256-QNSISr719ycZ1Z0quxHWzCb3IvHGj9TpogaYz20hDM4=";
+      # rev == present HEAD of release/0.14.0
+      rev = "3d0427e222f7e42ae7be90c706d7fde555efca2e";
+      hash = "sha256-XMoNkBEEmD6AwNSu1uSh3OcWLfy4/ADtRckn/Pj2cP4=";
 
       /*
         It's not critical to drop most of these; the primary target is
@@ -73,7 +72,7 @@ rec {
         hash on rev updates. Command will fail w/o and not print hash.
       */
       postFetch = ''
-        rm -rf Python-2.7.13 benchmarks metrics py-yajl rfc gold web testdata services demo devtools cpp
+        rm -rf $out/{Python-2.7.13,metrics,py-yajl,rfc,gold,web,testdata,services,demo,devtools}
       '';
     };
 
@@ -84,11 +83,15 @@ rec {
         (builtins.filter (x: lib.hasSuffix ".patch" x) (builtins.attrNames (builtins.readDir ./.)))
     );
 
-    buildInputs = [ readline cmark py-yajl ];
+    buildInputs = [ cmark ];
+
+    configureFlags = [
+      "--without-readline"
+    ];
 
     nativeBuildInputs = [ re2c file makeWrapper ];
 
-    propagatedBuildInputs = [ six typing ];
+    propagatedBuildInputs = [ six typing py-yajl ];
 
     doCheck = true;
 
@@ -97,7 +100,12 @@ rec {
     '';
 
     postPatch = ''
-      patchShebangs asdl build core doctools frontend native oil_lang
+      patchShebangs asdl build core doctools frontend pyext oil_lang
+      substituteInPlace pyext/fastlex.c --replace '_gen/frontend' '../_gen/frontend'
+      substituteInPlace core/main_loop.py --replace 'import fanos' '# import fanos'
+      rm cpp/stdlib.h # keep modules from finding the wrong stdlib?
+      # work around hard parse failure documented in oilshell/oil#1468
+      substituteInPlace osh/cmd_parse.py --replace 'elif self.c_id == Id.Op_LParen' 'elif False'
     '';
 
     /*
@@ -111,8 +119,17 @@ rec {
     # See earlier note on glibcLocales TODO: verify needed?
     LOCALE_ARCHIVE = lib.optionalString (stdenv.buildPlatform.libc == "glibc") "${glibcLocales}/lib/locale/locale-archive";
 
-    # not exhaustive; just a spot-check for now
-    pythonImportsCheck = [ "oil" "oil._devbuild" ];
+    # not exhaustive; sample what resholve uses as a sanity check
+    pythonImportsCheck = [
+      "oil"
+      "oil.asdl"
+      "oil.core"
+      "oil.frontend"
+      "oil._devbuild"
+      "oil._devbuild.gen.id_kind_asdl"
+      "oil._devbuild.gen.syntax_asdl"
+      "oil.tools.osh2oil"
+    ];
 
     meta = {
       license = with lib.licenses; [

@@ -1,0 +1,25 @@
+From a827287bec35c3becbe04369528f903409a99897 Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Sat, 28 Jan 2023 18:52:28 -0600
+Subject: disable fanos (unused feature)
+
+---
+ build/py.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/py.sh b/build/py.sh
+index df7f1ab21..e1ffc649f 100755
+--- a/build/py.sh
++++ b/build/py.sh
+@@ -408,7 +408,7 @@ py-extensions() {
+   pylibc
+   # line-input
+   posix_
+-  fanos
++  # fanos
+ 
+   # Require submodule
+   yajl
+-- 
+2.36.0
+
