@@ -1,0 +1,25 @@
+From 78fddbf8e7460a0a265980912f847099041323ce Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Sun, 29 Jan 2023 13:20:03 -0600
+Subject: disable docs to drop cmark dep
+
+---
+ build/py.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/build/py.sh b/build/py.sh
+index e1ffc649f..55d76979a 100755
+--- a/build/py.sh
++++ b/build/py.sh
+@@ -464,7 +464,7 @@ all() {
+   # requires re2c: deps/from-tar.sh layer-re2c
+   fastlex
+   time-helper
+-  build/doc.sh all-help
++  # build/doc.sh all-help
+ }
+ 
+ gitpod-minimal() {
+-- 
+2.39.0
+
