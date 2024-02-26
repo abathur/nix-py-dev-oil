@@ -13,13 +13,14 @@ new file mode 100644
 index 00000000..ed7189af
 --- /dev/null
 +++ b/setup.py
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,20 @@
 +#!/usr/bin/env python2
 +from setuptools import setup, find_packages, Extension
 +
 +posix_ = Extension("posix_", sources=["pyext/posixmodule.c"])
 +fastlex = Extension("fastlex", sources=["pyext/fastlex.c"], undef_macros=["NDEBUG"])
 +libc = Extension("libc", sources=["pyext/libc.c"], undef_macros=["NDEBUG"])
++fastfunc = Extension("fastfunc", sources=["pyext/fastfunc.c", "data_lang/j8_libc.c"], include_dirs=["data_lang"], undef_macros=["NDEBUG"])
 +
 +setup(
 +    name="oil",
@@ -30,7 +31,7 @@ index 00000000..ed7189af
 +    include_package_data=True,
 +    # For posix_methods.def
 +    include_dirs=["build/oil-defs", "_devbuild/gen"],  # posix_ & fastlex
-+    ext_modules=[posix_, fastlex, libc],
++    ext_modules=[posix_, fastlex, libc, fastfunc],
 +    scripts=["bin/oil.py", "bin/osh_eval.py", "bin/osh_parse.py"],
 +)
 --

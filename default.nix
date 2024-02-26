@@ -6,8 +6,6 @@
 , makeWrapper
 , # re2c deps
   autoreconfHook
-, # py-yajl deps
-  git
 , # oil deps
   file
 , pkgsBuildBuild
@@ -30,20 +28,6 @@ rec {
     preCheck = ''
       patchShebangs run_tests.sh
     '';
-  };
-
-  py-yajl = python27.pkgs.buildPythonPackage rec {
-    pname = "oil-pyyajl-unstable";
-    version = "2022-09-01";
-    src = fetchFromGitHub {
-      owner = "oilshell";
-      repo = "py-yajl";
-      rev = "72686b0e2e9d13d3ce5fefe47ecd607c540c90a3";
-      hash = "sha256-H3GKN0Pq1VFD5+SWxm8CXUVO7zAyj/ngKVmDaG/aRT4=";
-      fetchSubmodules = true;
-    };
-    # just for submodule IIRC
-    nativeBuildInputs = [ git ];
   };
 
   /*
@@ -88,7 +72,7 @@ rec {
 
     nativeBuildInputs = [ re2c file makeWrapper ];
 
-    propagatedBuildInputs = [ six typing py-yajl ];
+    propagatedBuildInputs = [ six typing ];
 
     doCheck = true;
 
