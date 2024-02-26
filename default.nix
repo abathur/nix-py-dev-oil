@@ -77,7 +77,7 @@ rec {
     doCheck = true;
 
     preBuild = ''
-      build/dev.sh all
+      build/py.sh all
     '';
 
     postPatch = ''
