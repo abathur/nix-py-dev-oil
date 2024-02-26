@@ -98,7 +98,6 @@ rec {
 
     postPatch = ''
       patchShebangs asdl build core doctools frontend pyext oil_lang
-      substituteInPlace pyext/fastlex.c --replace '_gen/frontend' '../_gen/frontend'
       rm cpp/stdlib.h # keep modules from finding the wrong stdlib?
       # work around hard parse failure documented in oilshell/oil#1468
       substituteInPlace osh/cmd_parse.py --replace 'elif self.c_id == Id.Op_LParen' 'elif False'

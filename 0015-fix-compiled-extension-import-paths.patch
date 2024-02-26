@@ -1,0 +1,80 @@
+From 8691deb41fd517a36b12d38f34f8b8a52720ced3 Mon Sep 17 00:00:00 2001
+From: "Travis A. Everett" <travis.a.everett@gmail.com>
+Date: Mon, 26 Feb 2024 13:44:17 -0700
+Subject: fix relative paths in compiled extensions
+
+We build some extensions a little differently than upstream,
+so we need to fix some relative import paths.
+---
+ data_lang/j8.h      | 2 +-
+ data_lang/j8_libc.c | 4 ++--
+ pyext/fastfunc.c    | 6 +++---
+ pyext/fastlex.c     | 6 +++---
+ 4 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/data_lang/j8.h b/data_lang/j8.h
+index 2ba53acbb..f2d766a14 100644
+--- a/data_lang/j8.h
++++ b/data_lang/j8.h
+@@ -4,7 +4,7 @@
+ #include <stdio.h>   // sprintf
+ #include <string.h>  // memcmp
+ 
+-#include "data_lang/utf8_impls/bjoern_dfa.h"
++#include "utf8_impls/bjoern_dfa.h"
+ 
+ #define J8_OUT(ch) \
+   **p_out = (ch);  \
+diff --git a/data_lang/j8_libc.c b/data_lang/j8_libc.c
+index 58a5aaa46..c8207dded 100644
+--- a/data_lang/j8_libc.c
++++ b/data_lang/j8_libc.c
+@@ -1,9 +1,9 @@
+-#include "data_lang/j8_libc.h"
++#include "j8_libc.h"
+ 
+ #include <stdbool.h>  // false
+ #include <stdlib.h>   // realloc
+ 
+-#include "data_lang/j8.h"  // EncodeRuneOrByte
++#include "j8.h"  // EncodeRuneOrByte
+ 
+ void EncodeBString(j8_buf_t in_buf, j8_buf_t* out_buf, int capacity) {
+   // Compute pointers for the inner loop
+diff --git a/pyext/fastfunc.c b/pyext/fastfunc.c
+index 7fef83368..98ca4efd0 100644
+--- a/pyext/fastfunc.c
++++ b/pyext/fastfunc.c
+@@ -5,9 +5,9 @@
+ #include <stdio.h>  // vfprintf
+ #include <stdlib.h>
+ 
+-#include "data_lang/j8.h"  // CanOmitQuotes
+-#include "data_lang/j8_libc.h"
+-#include "data_lang/utf8_impls/bjoern_dfa.h"
++#include "../data_lang/j8.h"  // CanOmitQuotes
++#include "../data_lang/j8_libc.h"
++#include "../data_lang/utf8_impls/bjoern_dfa.h"
+ 
+ #include <Python.h>
+ 
+diff --git a/pyext/fastlex.c b/pyext/fastlex.c
+index c6b51a982..a3fa8a035 100644
+--- a/pyext/fastlex.c
++++ b/pyext/fastlex.c
+@@ -7,9 +7,9 @@
+ 
+ #include <Python.h>
+ 
+-#include "_gen/frontend/id_kind.asdl_c.h"
+-#include "_gen/frontend/types.asdl_c.h"  // for lex_mode_e
+-#include "_gen/frontend/match.re2c.h"
++#include "../_gen/frontend/id_kind.asdl_c.h"
++#include "../_gen/frontend/types.asdl_c.h"  // for lex_mode_e
++#include "../_gen/frontend/match.re2c.h"
+ 
+ // TODO: Should this be shared among all extensions?
+ // Log messages to stderr.
+-- 
+2.43.0
+
