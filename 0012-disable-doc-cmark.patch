@@ -11,12 +11,12 @@ diff --git a/build/py.sh b/build/py.sh
 index e1ffc649f..55d76979a 100755
 --- a/build/py.sh
 +++ b/build/py.sh
-@@ -464,7 +464,7 @@ all() {
-   # requires re2c: deps/from-tar.sh layer-re2c
-   fastlex
+@@ -422,7 +422,7 @@ all() {
    time-helper
--  build/doc.sh all-help
-+  # build/doc.sh all-help
+ 
+   # help topics and chapter links are extracted from doc/ref
+-  build/doc.sh all-ref
++  # build/doc.sh all-ref
  }
  
  gitpod-minimal() {
