@@ -7,19 +7,28 @@ Subject: disable fanos (unused feature)
  build/py.sh | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/build/py.sh b/build/py.sh
-index df7f1ab21..e1ffc649f 100755
---- a/build/py.sh
-+++ b/build/py.sh
-@@ -408,7 +408,7 @@ py-extensions() {
+@@ -360,7 +360,7 @@ py-extensions() {
    pylibc
-   # line-input
+   line-input
    posix_
 -  fanos
 +  # fanos
+   fastfunc
+ }
+
+diff --git a/core/main_loop.py b/core/main_loop.py
+index 074a51334..474b6ca6e 100644
+--- a/core/main_loop.py
++++ b/core/main_loop.py
+@@ -22,7 +22,7 @@ from osh import cmd_eval
+ from mycpp import mylib
+ from mycpp.mylib import log, print_stderr, tagswitch
  
-   # Require submodule
-   yajl
+-import fanos
++# import fanos
+ import posix_ as posix
+ 
+ from typing import cast, Any, List, TYPE_CHECKING
 -- 
 2.36.0
 
